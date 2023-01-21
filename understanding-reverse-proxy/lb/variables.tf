@@ -24,9 +24,9 @@ variable "hosted_zone_id" {
   type        = string
 }
 
-variable "record_names" {
-  description = "Endpoint record name"
-  type = list(any) 
+variable "ec2_security_group_id" {
+  type = string 
+  description = "EC2 security group id"
 }
 
 variable "base_domain" {
