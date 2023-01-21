@@ -12,8 +12,8 @@ resource "aws_security_group" "web_sg" {
   description = "Load balancer security firewall"
 
   ingress {
-    from_port   = 8080
-    to_port     = 8082
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -52,14 +52,102 @@ resource "aws_lb_target_group_attachment" "target" {
 }
 
 resource "aws_lb_listener" "listener" {
-  for_each          = toset(var.ports_for_target_groups)
   load_balancer_arn = aws_lb.proxy.id
-  port              = each.key
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.certificate_arn
 
   default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.container[each.key].arn
+    type             = "fixed-response"
+    
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Unauthorized"
+      status_code = 401
+    }
+  }
+}
+
+resource "aws_route53_record" "endpoint" {
+  for_each = toset(var.record_names)
+  zone_id = var.hosted_zone_id
+  name    = each.key 
+  type    = "A"
+
+  alias {
+    name = aws_lb.proxy.dns_name 
+    zone_id = aws_lb.proxy.zone_id
+    evaluate_target_health = true 
+  }
+}
+
+resource "aws_lb_listener_rule" "radarr_rule" {
+  listener_arn = aws_lb_listener.listener.arn 
+  priority = 10
+
+  condition {
+    host_header {
+      values = ["radarr.${var.base_domain}"]
+    }
   }
 
-  tags = local.tags
+  action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.container["8082"].arn 
+  }
+}
+
+resource "aws_lb_listener_rule" "sonarr_rule" {
+  listener_arn = aws_lb_listener.listener.arn 
+  priority = 20
+
+  condition {
+    host_header {
+      values = ["sonarr.${var.base_domain}"]
+    }
+  }
+
+  action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.container["8081"].arn 
+  }
+}
+
+resource "aws_lb_listener_rule" "blog_rule" {
+  listener_arn = aws_lb_listener.listener.arn 
+  priority = 30
+
+  condition {
+    host_header {
+      values = ["main.${var.base_domain}"]
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = ["/ghost/*"]
+    }
+  }
+
+  action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.container["8080"].arn 
+  }
+}
+
+resource "aws_lb_listener_rule" "main_rule" {
+  listener_arn = aws_lb_listener.listener.arn 
+  priority = 40
+
+  condition {
+    host_header {
+      values = ["main.${var.base_domain}"]
+    }
+  }
+
+  action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.container["8080"].arn 
+  }
 }

@@ -11,5 +11,25 @@ variable "ports_for_target_groups" {
 
 variable "instance_id" {
   description = "Target ec2 instance id"
+  type        = string
+}
+
+variable "certificate_arn" {
+  description = "TLS certificate ARN"
+  type        = string
+}
+
+variable "hosted_zone_id" {
+  description = "Hosted zone id"
+  type        = string
+}
+
+variable "record_names" {
+  description = "Endpoint record name"
+  type = list(any) 
+}
+
+variable "base_domain" {
   type = string 
+  description = "Base domain"
 }
