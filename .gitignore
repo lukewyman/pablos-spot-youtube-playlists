@@ -1,3 +1,5 @@
+Pipfile*
+
 # Local .terraform directories
 **/.terraform/*
 
