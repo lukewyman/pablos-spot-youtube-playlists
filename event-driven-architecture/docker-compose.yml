@@ -1,8 +1,22 @@
 version: '3.8'
 
 services:
+    backend:
+        build:
+            context: .
+            dockerfile: backend.Dockerfile
+        command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8000
+        environment:
+            - BROKER=amqp://guest:guest@rabbitmq:5672//
+            - BACKEND=rpc://
+        ports:
+        - 8000:8000
+        volumes: 
+        - /tmp/static:/tmp/static
     worker:
-        build: .
+        build:
+            context: .
+            dockerfile: worker.Dockerfile
         command: celery -A workers.thumbnail worker --loglevel=info
         environment:
             - BROKER=amqp://guest:guest@rabbitmq:5672//

@@ -5,7 +5,7 @@ WORKDIR /usr/src
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-COPY ./requirements.txt /usr/src/requirements.txt
+COPY ./requirements-backend.txt /usr/src/requirements.txt
 
 RUN set -eux \
     && apk add --no-cache --virtual .build-deps build-base \
@@ -19,4 +19,6 @@ RUN set -eux \
     && rm -rf /root/.cache/pip
 
 COPY ./app/ /usr/src/app/
+COPY ./workers/ /usr/src/workers/
+COPY ./entities/ /usr/src/entities/
 COPY ./tests/ /usr/src/tests/

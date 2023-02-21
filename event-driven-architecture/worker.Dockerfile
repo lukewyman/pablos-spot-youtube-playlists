@@ -5,7 +5,7 @@ WORKDIR /usr/src
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONBUFFERED 1
 
-COPY ./requirements.txt requirements.txt
+COPY ./requirements-workers.txt requirements.txt
 RUN set -eux \
     && apk add --no-cache --virtual .build-deps build-base \
     libressl-dev libffi-dev gcc musl-dev python3-dev \
